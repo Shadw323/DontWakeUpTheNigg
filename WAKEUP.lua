@@ -1,3 +1,4 @@
+local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -12,16 +13,55 @@ MainGui.Name = "MainGui"
 MainGui.ResetOnSpawn = false
 MainGui.Parent = PlayerGui
 
-local AdminPanel = Instance.new("Frame")
-AdminPanel.Name = "AdminPanel"
-AdminPanel.Size = UDim2.new(0, 400, 0, 300) -- Más pequeño para móviles
-AdminPanel.Position = UDim2.new(0.5, -200, 0.5, -150)
-AdminPanel.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-AdminPanel.BorderSizePixel = 0
-AdminPanel.Visible = true
-AdminPanel.Parent = MainGui
+-- Texto de bienvenida
+local WelcomeText = Instance.new("TextLabel")
+WelcomeText.Size = UDim2.new(0, 400, 0, 100)
+WelcomeText.Position = UDim2.new(0.5, -200, 0.5, -50)
+WelcomeText.BackgroundTransparency = 1
+WelcomeText.Text = "Welcome To Shadow Panel"
+WelcomeText.TextColor3 = Color3.fromRGB(106, 27, 154) -- Púrpura shadow
+WelcomeText.TextScaled = true
+WelcomeText.Font = Enum.Font.Gotham
+WelcomeText.Parent = MainGui
 
--- Hacer el panel arrastrable
+-- Crear ShadowsPanel
+local ShadowsPanel = Instance.new("Frame")
+ShadowsPanel.Name = "ShadowsPanel"
+ShadowsPanel.Size = UDim2.new(0, 400, 0, 300)
+ShadowsPanel.Position = UDim2.new(0.5, -200, 0.5, -150)
+ShadowsPanel.BackgroundColor3 = Color3.fromRGB(26, 26, 26) -- Negro elegante
+ShadowsPanel.BorderSizePixel = 0
+ShadowsPanel.Visible = false
+ShadowsPanel.Parent = MainGui
+
+-- Animación de entrada
+local function animatePanelOpen()
+    ShadowsPanel.BackgroundTransparency = 1
+    ShadowsPanel.Size = UDim2.new(0, 200, 0, 150)
+    ShadowsPanel.Visible = true
+    local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(ShadowsPanel, tweenInfo, {
+        BackgroundTransparency = 0,
+        Size = UDim2.new(0, 400, 0, 300)
+    })
+    tween:Play()
+end
+
+-- Animación de cierre
+local function animatePanelClose(callback)
+    local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+    local tween = TweenService:Create(ShadowsPanel, tweenInfo, {
+        BackgroundTransparency = 1,
+        Size = UDim2.new(0, 200, 0, 150)
+    })
+    tween:Play()
+    tween.Completed:Connect(function()
+        ShadowsPanel.Visible = false
+        if callback then callback() end
+    end)
+end
+
+-- Hacer arrastrable
 local dragging = false
 local dragStartPos = nil
 local panelStartPos = nil
@@ -30,13 +70,13 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         local pos = input.Position
-        local panelPos = AdminPanel.AbsolutePosition
-        local panelSize = AdminPanel.AbsoluteSize
+        local panelPos = ShadowsPanel.AbsolutePosition
+        local panelSize = ShadowsPanel.AbsoluteSize
         if pos.X >= panelPos.X and pos.X <= panelPos.X + panelSize.X and
-           pos.Y >= panelPos.Y and pos.Y <= panelPos.Y + 30 then -- Solo arrastrar desde el título
+           pos.Y >= panelPos.Y and pos.Y <= panelPos.Y + 30 then
             dragging = true
             dragStartPos = pos
-            panelStartPos = AdminPanel.Position
+            panelStartPos = ShadowsPanel.Position
         end
     end
 end)
@@ -51,7 +91,7 @@ UserInputService.InputChanged:Connect(function(input, gameProcessed)
             panelStartPos.Y.Scale,
             panelStartPos.Y.Offset + delta.Y
         )
-        AdminPanel.Position = newPos
+        ShadowsPanel.Position = newPos
     end
 end)
 
@@ -64,24 +104,27 @@ end)
 -- Título
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, -30, 0, 30)
-Title.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-Title.Text = "Admin Panel GRATIS"
+Title.BackgroundColor3 = Color3.fromRGB(106, 27, 154)
+Title.Text = "ShadowsPanel - Épico y Elegante"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextScaled = true
-Title.Parent = AdminPanel
+Title.Font = Enum.Font.Gotham
+Title.Parent = ShadowsPanel
 
--- Botón de cerrar
+-- Botón cerrar
 local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0, 30, 0, 30)
 CloseButton.Position = UDim2.new(1, -30, 0, 0)
-CloseButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+CloseButton.BackgroundColor3 = Color3.fromRGB(106, 27, 154)
 CloseButton.Text = "X"
 CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseButton.TextScaled = true
-CloseButton.Parent = AdminPanel
+CloseButton.Font = Enum.Font.Gotham
+CloseButton.Parent = ShadowsPanel
 CloseButton.MouseButton1Click:Connect(function()
-    AdminPanel.Visible = false
-    print("Panel cerrado")
+    animatePanelClose(function()
+        print("ShadowsPanel cerrado")
+    end)
 end)
 
 local Main = Instance.new("Frame")
@@ -89,7 +132,7 @@ Main.Name = "Main"
 Main.Size = UDim2.new(1, 0, 1, -30)
 Main.Position = UDim2.new(0, 0, 0, 30)
 Main.BackgroundTransparency = 1
-Main.Parent = AdminPanel
+Main.Parent = ShadowsPanel
 
 -- CommandInput
 local CommandInput = Instance.new("Frame")
@@ -107,7 +150,8 @@ TextBox.BackgroundTransparency = 1
 TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 TextBox.PlaceholderText = "Escribe comando (ej: huge)"
 TextBox.Text = ""
-TextBox.TextScaled = true -- Mejor para móviles
+TextBox.TextScaled = true
+TextBox.Font = Enum.Font.Gotham
 TextBox.Parent = CommandInput
 
 -- CommandList
@@ -149,10 +193,10 @@ local PlayerListLayout = Instance.new("UIListLayout")
 PlayerListLayout.Padding = UDim.new(0, 3)
 PlayerListLayout.Parent = PlayerContents
 
--- Template para jugadores
+-- Template jugadores
 local TemplateButton = Instance.new("TextButton")
 TemplateButton.Name = "TemplateButton"
-TemplateButton.Size = UDim2.new(1, -10, 0, 35) -- Más pequeño para móviles
+TemplateButton.Size = UDim2.new(1, -10, 0, 35)
 TemplateButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 TemplateButton.Text = ""
 TemplateButton.Visible = false
@@ -173,9 +217,10 @@ PlayerName.BackgroundTransparency = 1
 PlayerName.TextColor3 = Color3.fromRGB(255, 255, 255)
 PlayerName.TextXAlignment = Enum.TextXAlignment.Left
 PlayerName.TextScaled = true
+PlayerName.Font = Enum.Font.Gotham
 PlayerName.Parent = TemplateButton
 
--- Botones de comandos
+-- Comandos
 local commands = {"Huge", "Tiny", "Explode", "Fling", "Ragdoll", "Jail", "Spin", "Teleport", "Jumpscare"}
 local selectedCommand = nil
 local selectedButton = nil
@@ -188,8 +233,9 @@ for _, cmd in ipairs(commands) do
     button.Text = cmd
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
     button.TextScaled = true
+    button.Font = Enum.Font.Gotham
     local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(0, 0, 0)
+    stroke.Color = Color3.fromRGB(106, 27, 154)
     stroke.Thickness = 1
     stroke.Parent = button
     button.Parent = Contents
@@ -200,14 +246,14 @@ for _, cmd in ipairs(commands) do
         end
         selectedCommand = cmd
         selectedButton = button
-        button.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-        button.TextColor3 = Color3.fromRGB(0, 0, 0)
+        button.BackgroundColor3 = Color3.fromRGB(106, 27, 154)
+        button.TextColor3 = Color3.fromRGB(255, 255, 255)
         TextBox.Text = cmd
         print("Comando seleccionado: " .. cmd)
     end)
 end
 
--- Funciones para jugadores
+-- Jugadores
 local playerButtons = {}
 local function addPlayer(player)
     if playerButtons[player] then return end
@@ -247,7 +293,6 @@ local function removePlayer(player)
     end
 end
 
--- Cargar jugadores
 task.spawn(function()
     task.wait(1)
     local playerCount = 0
@@ -269,27 +314,53 @@ TextBox.FocusLost:Connect(function(enterPressed)
     end
 end)
 
--- Toggle con tecla A
+-- Toggle tecla G
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.G then
-        AdminPanel.Visible = not AdminPanel.Visible
-        print("Panel toggled: " .. (AdminPanel.Visible and "Visible" or "Oculto"))
+        if ShadowsPanel.Visible then
+            animatePanelClose(function()
+                print("ShadowsPanel toggled: Oculto")
+            end)
+        else
+            animatePanelOpen()
+            print("ShadowsPanel toggled: Visible")
+        end
     end
 end)
 
--- Botón toggle
+-- Botón toggle flotante
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Size = UDim2.new(0, 60, 0, 30)
 ToggleBtn.Position = UDim2.new(0, 10, 0, 10)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-ToggleBtn.Text = "Admin (A)"
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(106, 27, 154)
+ToggleBtn.Text = "Shadows (G)"
 ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 ToggleBtn.TextScaled = true
+ToggleBtn.Font = Enum.Font.Gotham
 ToggleBtn.Parent = MainGui
 ToggleBtn.MouseButton1Click:Connect(function()
-    AdminPanel.Visible = not AdminPanel.Visible
-    print("Panel toggled: " .. (AdminPanel.Visible and "Visible" or "Oculto"))
+    if ShadowsPanel.Visible then
+        animatePanelClose(function()
+            print("ShadowsPanel toggled: Oculto")
+        end)
+    else
+        animatePanelOpen()
+        print("ShadowsPanel toggled: Visible")
+    end
 end)
 
-print("¡Admin Panel GRATIS cargado! Arrástralo desde el título, ciérralo con X, presiona 'A' para togglear. Optimizado para móvil.")
+-- Mostrar texto de bienvenida y luego el panel
+task.spawn(function()
+    WelcomeText.Visible = true
+    task.wait(2) -- Retraso de 2 segundos
+    local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+    local tween = TweenService:Create(WelcomeText, tweenInfo, {BackgroundTransparency = 1, TextTransparency = 1})
+    tween:Play()
+    tween.Completed:Connect(function()
+        WelcomeText:Destroy()
+        animatePanelOpen()
+    end)
+end)
+
+print("¡ShadowsPanel ÉPICO cargado! Bienvenida en pantalla, toggle con G, animaciones suaves. 😈")
