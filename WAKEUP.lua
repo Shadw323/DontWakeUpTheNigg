@@ -3,7 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
-local SubmitCommand = Remotes:FindFirstChild("SubmitCommand") -- No fallará si no existe
+local SubmitCommand = Remotes:FindFirstChild("SubmitCommand")
 
 -- Crear GUI
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -14,21 +14,75 @@ MainGui.Parent = PlayerGui
 
 local AdminPanel = Instance.new("Frame")
 AdminPanel.Name = "AdminPanel"
-AdminPanel.Size = UDim2.new(0, 500, 0, 350)
-AdminPanel.Position = UDim2.new(0.5, -250, 0.5, -175)
+AdminPanel.Size = UDim2.new(0, 400, 0, 300) -- Más pequeño para móviles
+AdminPanel.Position = UDim2.new(0.5, -200, 0.5, -150)
 AdminPanel.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 AdminPanel.BorderSizePixel = 0
 AdminPanel.Visible = true
 AdminPanel.Parent = MainGui
 
+-- Hacer el panel arrastrable
+local dragging = false
+local dragStartPos = nil
+local panelStartPos = nil
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        local pos = input.Position
+        local panelPos = AdminPanel.AbsolutePosition
+        local panelSize = AdminPanel.AbsoluteSize
+        if pos.X >= panelPos.X and pos.X <= panelPos.X + panelSize.X and
+           pos.Y >= panelPos.Y and pos.Y <= panelPos.Y + 30 then -- Solo arrastrar desde el título
+            dragging = true
+            dragStartPos = pos
+            panelStartPos = AdminPanel.Position
+        end
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStartPos
+        local newPos = UDim2.new(
+            panelStartPos.X.Scale,
+            panelStartPos.X.Offset + delta.X,
+            panelStartPos.Y.Scale,
+            panelStartPos.Y.Offset + delta.Y
+        )
+        AdminPanel.Position = newPos
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input, gameProcessed)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
 -- Título
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Size = UDim2.new(1, -30, 0, 30)
 Title.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
 Title.Text = "Admin Panel GRATIS"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextScaled = true
 Title.Parent = AdminPanel
+
+-- Botón de cerrar
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -30, 0, 0)
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextScaled = true
+CloseButton.Parent = AdminPanel
+CloseButton.MouseButton1Click:Connect(function()
+    AdminPanel.Visible = false
+    print("Panel cerrado")
+end)
 
 local Main = Instance.new("Frame")
 Main.Name = "Main"
@@ -53,20 +107,21 @@ TextBox.BackgroundTransparency = 1
 TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 TextBox.PlaceholderText = "Escribe comando (ej: huge)"
 TextBox.Text = ""
+TextBox.TextScaled = true -- Mejor para móviles
 TextBox.Parent = CommandInput
 
 -- CommandList
 local CommandList = Instance.new("Frame")
 CommandList.Name = "CommandList"
-CommandList.Size = UDim2.new(0, 180, 0, 250)
+CommandList.Size = UDim2.new(0, 150, 0, 200)
 CommandList.Position = UDim2.new(0, 10, 0, 60)
 CommandList.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 CommandList.Parent = Main
 
 local Contents = Instance.new("Frame")
 Contents.Name = "Contents"
-Contents.Size = UDim2.new(1, -10, 1, -10)
-Contents.Position = UDim2.new(0, 5, 0, 5)
+Contents.Size = UDim2.new(1, 0, 1, 0)
+Contents.Position = UDim2.new(0, 0, 0, 0)
 Contents.BackgroundTransparency = 1
 Contents.Parent = CommandList
 
@@ -77,10 +132,10 @@ UIListLayout.Parent = Contents
 -- PlayerList
 local PlayerList = Instance.new("Frame")
 PlayerList.Name = "PlayerList"
-PlayerList.Size = UDim2.new(0, 280, 0, 250)
-PlayerList.Position = UDim2.new(0, 200, 0, 60)
+PlayerList.Size = UDim2.new(0, 220, 0, 200)
+PlayerList.Position = UDim2.new(0, 170, 0, 60)
 PlayerList.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-PlayerList.BackgroundTransparency = 0 -- Asegurar visibilidad
+PlayerList.BackgroundTransparency = 0
 PlayerList.Parent = Main
 
 local PlayerContents = Instance.new("Frame")
@@ -97,7 +152,7 @@ PlayerListLayout.Parent = PlayerContents
 -- Template para jugadores
 local TemplateButton = Instance.new("TextButton")
 TemplateButton.Name = "TemplateButton"
-TemplateButton.Size = UDim2.new(1, -10, 0, 40)
+TemplateButton.Size = UDim2.new(1, -10, 0, 35) -- Más pequeño para móviles
 TemplateButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 TemplateButton.Text = ""
 TemplateButton.Visible = false
@@ -106,7 +161,7 @@ TemplateButton.Parent = PlayerContents
 local PlayerImage = Instance.new("ImageLabel")
 PlayerImage.Name = "PlayerImage"
 PlayerImage.Size = UDim2.new(0, 30, 0, 30)
-PlayerImage.Position = UDim2.new(0, 5, 0, 5)
+PlayerImage.Position = UDim2.new(0, 5, 0, 2)
 PlayerImage.BackgroundTransparency = 1
 PlayerImage.Parent = TemplateButton
 
@@ -117,6 +172,7 @@ PlayerName.Position = UDim2.new(0, 40, 0, 0)
 PlayerName.BackgroundTransparency = 1
 PlayerName.TextColor3 = Color3.fromRGB(255, 255, 255)
 PlayerName.TextXAlignment = Enum.TextXAlignment.Left
+PlayerName.TextScaled = true
 PlayerName.Parent = TemplateButton
 
 -- Botones de comandos
@@ -155,7 +211,7 @@ end
 local playerButtons = {}
 local function addPlayer(player)
     if playerButtons[player] then return end
-    print("Añadiendo jugador: " .. player.Name) -- Debug
+    print("Añadiendo jugador: " .. player.Name)
     local button = TemplateButton:Clone()
     playerButtons[player] = button
     button.PlayerImage.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=150&height=150&format=png"
@@ -185,15 +241,15 @@ end
 
 local function removePlayer(player)
     if playerButtons[player] then
-        print("Eliminando jugador: " .. player.Name) -- Debug
+        print("Eliminando jugador: " .. player.Name)
         playerButtons[player]:Destroy()
         playerButtons[player] = nil
     end
 end
 
--- Cargar jugadores con retraso para asegurar sincronización
+-- Cargar jugadores
 task.spawn(function()
-    task.wait(1) -- Espera breve para que Players se inicialice
+    task.wait(1)
     local playerCount = 0
     for _, player in pairs(Players:GetPlayers()) do
         addPlayer(player)
@@ -229,10 +285,11 @@ ToggleBtn.Position = UDim2.new(0, 10, 0, 10)
 ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
 ToggleBtn.Text = "Admin (A)"
 ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.TextScaled = true
 ToggleBtn.Parent = MainGui
 ToggleBtn.MouseButton1Click:Connect(function()
     AdminPanel.Visible = not AdminPanel.Visible
     print("Panel toggled: " .. (AdminPanel.Visible and "Visible" or "Oculto"))
 end)
 
-print("¡Admin Panel GRATIS cargado! Presiona 'A' para togglear. Lista de jugadores debería estar a la derecha.")
+print("¡Admin Panel GRATIS cargado! Arrástralo desde el título, ciérralo con X, presiona 'A' para togglear. Optimizado para móvil.")
